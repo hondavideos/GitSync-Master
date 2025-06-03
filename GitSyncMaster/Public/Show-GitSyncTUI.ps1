@@ -369,9 +369,14 @@ function Handle-UserInput {
                     }
                 }
                 'Backspace' {
-                    # Remove last command part
+                    # Remove last command part safely
                     if ($script:AppState.CommandParts.Count -gt 0) {
-                        $script:AppState.CommandParts = $script:AppState.CommandParts[0..($script:AppState.CommandParts.Count-2)]
+                        if ($script:AppState.CommandParts.Count -eq 1) {
+                            $script:AppState.CommandParts = @()
+                        }
+                        else {
+                            $script:AppState.CommandParts = $script:AppState.CommandParts[0..($script:AppState.CommandParts.Count - 2)]
+                        }
                         $script:AppState.SelectedIndex = 0
                         Update-CommandBuilderOptions
                     }

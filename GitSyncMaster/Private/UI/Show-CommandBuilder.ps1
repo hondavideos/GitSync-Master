@@ -41,8 +41,10 @@ function Show-CommandBuilder {
         Update-CommandBuilderOptions
     }
     
-    # Track if we should show tooltips
-    $script:AppState.ShowTooltips = $true
+    # Ensure ShowTooltips state exists but don't override user preference
+    if (-not [bool]($script:AppState.PSObject.Properties.Name -match 'ShowTooltips')) {
+        $script:AppState | Add-Member -NotePropertyName ShowTooltips -NotePropertyValue $true
+    }
     
     # Show current command
     Move-Cursor -Row $Y -Column $X
