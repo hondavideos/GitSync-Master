@@ -152,3 +152,11 @@ The module can be extended by:
 2. Creating additional help content
 3. Extending the tutorial with more advanced Git concepts
 4. Adding support for Git hooks and integrations
+
+## Testing
+
+Pester tests are provided to verify module functionality. Run them from the repository root:
+
+```powershell
+Invoke-Pester
+```
