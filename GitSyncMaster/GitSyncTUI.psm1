@@ -136,34 +136,7 @@ function script:Draw-Box {
         [Parameter(Mandatory)]
         [int]$X,
         
-        [Parameter(Mandvisory)]
-        [int]$Column
-    )
-    
-    Write-Host "$script:EscChar[$Row;${Column}H" -NoNewline
-}
-
-function script:Clear-Screen {
-    [CmdletBinding()]
-    param()
-    
-    Write-Host (Get-ANSIEscape -Code 'Clear') -NoNewline
-}
-
-function script:Clear-Line {
-    [CmdletBinding()]
-    param()
-    
-    Write-Host (Get-ANSIEscape -Code 'ClearLine') -NoNewline
-}
-
-function script:Draw-Box {
-    [CmdletBinding()]
-    param(
         [Parameter(Mandatory)]
-        [int]$X,
-        
-        [Parameter(Mandvisory)]
         [int]$Y,
         
         [Parameter(Mandatory)]
