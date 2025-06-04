@@ -42,8 +42,8 @@ function Show-CommandBuilder {
     }
     
     # Ensure ShowTooltips state exists but don't override user preference
-    if (-not [bool]($script:AppState.PSObject.Properties.Name -match 'ShowTooltips')) {
-        $script:AppState | Add-Member -NotePropertyName ShowTooltips -NotePropertyValue $true
+    if (-not $script:AppState.ContainsKey('ShowTooltips')) {
+        $script:AppState['ShowTooltips'] = $true
     }
     
     # Show current command
