@@ -136,7 +136,7 @@ function script:Draw-Box {
         [Parameter(Mandatory)]
         [int]$X,
         
-        [Parameter(Mandvisory)]
+        [Parameter(Mandatory)]
         [int]$Column
     )
     
@@ -163,7 +163,7 @@ function script:Draw-Box {
         [Parameter(Mandatory)]
         [int]$X,
         
-        [Parameter(Mandvisory)]
+        [Parameter(Mandatory)]
         [int]$Y,
         
         [Parameter(Mandatory)]
