@@ -478,8 +478,8 @@ function Update-CommandBuilderOptions {
                 if ($script:AppState.CommandParts.Count -eq 1) {
                     $script:AppState.CommandBuilderOptions = @("-a", "-r", "-d", "-D", "--list", "newbranch", "Execute", "Clear")
                 }
-                elseif ($script:AppState.CommandParts.Count -eq 2 -and ($script:AppState.CommandParts[1] -eq "-d" -or 
-                                                                        $script:AppState.CommandParts[1] -eq "-D")) {
+                elseif ($script:AppState.CommandParts.Count -eq 2 -and (($script:AppState.CommandParts[1] -eq "-d") -or 
+                                                                        ($script:AppState.CommandParts[1] -eq "-D"))) {
                     # Get branches for deletion
                     $branches = (git branch --format="%(refname:short)" 2>$null) | Where-Object { $_ -match "\S+" }
                     if ($branches) {
