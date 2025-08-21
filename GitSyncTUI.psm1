@@ -1,46 +1,38 @@
 #region Module Imports
-# Import all private functions
-$PrivateFunctions = @(Get-ChildItem -Path $PSScriptRoot\Private -Recurse -Filter "*.ps1" -ErrorAction SilentlyContinue)
-foreach ($Private in $PrivateFunctions) {
+Get-ChildItem -Path (Join-Path $PSScriptRoot 'Private') -Recurse -Filter '*.ps1' | ForEach-Object {
     try {
-        . $Private.FullName
-    }
-    catch {
-        Write-Error -Message "Failed to import private function $($Private.FullName): $_"
+        . $_.FullName
+    } catch {
+        Write-Error "Failed to import private function $_: $_"
     }
 }
 
-# Import all public functions
-$PublicFunctions = @(Get-ChildItem -Path $PSScriptRoot\Public -Filter "*.ps1" -ErrorAction SilentlyContinue)
-foreach ($Public in $PublicFunctions) {
+Get-ChildItem -Path (Join-Path $PSScriptRoot 'Public') -Filter '*.ps1' | ForEach-Object {
     try {
-        . $Public.FullName
-    }
-    catch {
-        Write-Error -Message "Failed to import public function $($Public.FullName): $_"
+        . $_.FullName
+    } catch {
+        Write-Error "Failed to import public function $_: $_"
     }
 }
 #endregion
 
 #region Exported Functions
-# Export public functions
-Export-ModuleMember -Function (($PublicFunctions | Select-Object -ExpandProperty BaseName) -join ', ')
+Export-ModuleMember -Function (Get-ChildItem -Path (Join-Path $PSScriptRoot 'Public') -Filter '*.ps1' | Select-Object -ExpandProperty BaseName)
 #endregion
 
 #region Module Variables
-# Module-level variables
-$script:GitSyncTUIVersion = "1.0.0"
+$script:GitSyncTUIVersion = '1.0.0'
 $script:IsWindowsPlatform = $PSVersionTable.Platform -eq 'Win32NT' -or $null -eq $PSVersionTable.Platform
 $script:EscChar = [char]27
 $script:ModuleRoot = $PSScriptRoot
 #endregion
 
 #region ANSI Escape Code Functions
-function script:Get-ANSIEscape {
+function Get-ANSIEscape {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [ValidateSet('Reset', 'Bold', 'Underline', 'FgBlack', 'FgRed', 'FgGreen', 'FgYellow', 'FgBlue', 'FgMagenta', 'FgCyan', 'FgWhite', 'BgBlack', 'BgRed', 'BgGreen', 'BgYellow', 'BgBlue', 'BgMagenta', 'BgCyan', 'BgWhite', 'Clear', 'ClearLine')]
+        [ValidateSet('Reset','Bold','Underline','FgBlack','FgRed','FgGreen','FgYellow','FgBlue','FgMagenta','FgCyan','FgWhite','BgBlack','BgRed','BgGreen','BgYellow','BgBlue','BgMagenta','BgCyan','BgWhite','Clear','ClearLine')]
         [string]$Code
     )
 
@@ -71,146 +63,102 @@ function script:Get-ANSIEscape {
     return $codeMap[$Code]
 }
 
-function script:Write-Colored {
+function Write-Colored {
     param(
-        [Parameter(Position = 0)] # Removed Mandatory=$true and AllowEmptyString=$true
+        [Parameter(Position=0)]
         [string]$Text,
-        
-        [Parameter(Position = 1)]
-        [ValidateSet('Reset', 'Bold', 'Underline', 'FgBlack', 'FgRed', 'FgGreen', 'FgYellow', 'FgBlue', 'FgMagenta', 'FgCyan', 'FgWhite', 'BgBlack', 'BgRed', 'BgGreen', 'BgYellow', 'BgBlue', 'BgMagenta', 'BgCyan', 'BgWhite')]
+        [Parameter(Position=1)]
+        [ValidateSet('Reset','Bold','Underline','FgBlack','FgRed','FgGreen','FgYellow','FgBlue','FgMagenta','FgCyan','FgWhite','BgBlack','BgRed','BgGreen','BgYellow','BgBlue','BgMagenta','BgCyan','BgWhite')]
         [string[]]$Styles = @('Reset'),
-        
         [switch]$NoNewline
     )
-    
-    # Ensure Text is not null or empty for Write-Host
+
     if ([string]::IsNullOrEmpty($Text)) {
         $Text = ""
     }
-    
+
     $styleString = ""
     foreach ($style in $Styles) {
         $styleString += (Get-ANSIEscape -Code $style)
     }
-    
     $resetString = Get-ANSIEscape -Code 'Reset'
-    
+
     if ($NoNewline) {
         Write-Host "$styleString$Text$resetString" -NoNewline
-    }
-    else {
+    } else {
         Write-Host "$styleString$Text$resetString"
     }
 }
 
-function script:Move-Cursor {
+function Move-Cursor {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory)]
-        [int]$Row,
-        
-        [Parameter(Mandatory)]
-        [int]$Column
+        [Parameter(Mandatory)][int]$Row,
+        [Parameter(Mandatory)][int]$Column
     )
-    
     Write-Host "$script:EscChar[$Row;${Column}H" -NoNewline
 }
 
-function script:Clear-Screen {
+function Clear-Screen {
     [CmdletBinding()]
     param()
-    
     Write-Host (Get-ANSIEscape -Code 'Clear') -NoNewline
 }
 
-function script:Clear-Line {
+function Clear-Line {
     [CmdletBinding()]
     param()
-    
     Write-Host (Get-ANSIEscape -Code 'ClearLine') -NoNewline
 }
 
-function script:Draw-Box {
+function Draw-Box {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory)]
-        [int]$X,
-        
-        [Parameter(Mandatory)]
-        [int]$Column
-    )
-    
-    Write-Host "$script:EscChar[$Row;${Column}H" -NoNewline
-}
-
-function script:Clear-Screen {
-    [CmdletBinding()]
-    param()
-    
-    Write-Host (Get-ANSIEscape -Code 'Clear') -NoNewline
-}
-
-function script:Clear-Line {
-    [CmdletBinding()]
-    param()
-    
-    Write-Host (Get-ANSIEscape -Code 'ClearLine') -NoNewline
-}
-
-function script:Draw-Box {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory)]
-        [int]$X,
-        
-        [Parameter(Mandatory)]
-        [int]$Y,
-        
-        [Parameter(Mandatory)]
-        [int]$Width,
-        
-        [Parameter(Mandatory)]
-        [int]$Height,
-        
+        [Parameter(Mandatory)][int]$X,
+        [Parameter(Mandatory)][int]$Y,
+        [Parameter(Mandatory)][int]$Width,
+        [Parameter(Mandatory)][int]$Height,
         [string]$Title = "",
-        
-        [ValidateSet('Reset', 'Bold', 'Underline', 'FgBlack', 'FgRed', 'FgGreen', 'FgYellow', 'FgBlue', 'FgMagenta', 'FgCyan', 'FgWhite', 'BgBlack', 'BgRed', 'BgGreen', 'BgYellow', 'BgBlue', 'BgMagenta', 'BgCyan', 'BgWhite')]
+        [ValidateSet('Reset','Bold','Underline','FgBlack','FgRed','FgGreen','FgYellow','FgBlue','FgMagenta','FgCyan','FgWhite','BgBlack','BgRed','BgGreen','BgYellow','BgBlue','BgMagenta','BgCyan','BgWhite')]
         [string[]]$Styles = @('Reset')
     )
-    
+
     $horizontalBorder = "─" * ($Width - 2)
     $topBorder = "┌$horizontalBorder┐"
     $bottomBorder = "└$horizontalBorder┘"
     $space = " " * ($Width - 2)
-    
-    # Draw the box
+
     Move-Cursor -Row $Y -Column $X
     Write-Colored -Text $topBorder -Styles $Styles -NoNewline
-    
+
     for ($i = 1; $i -lt $Height - 1; $i++) {
         Move-Cursor -Row ($Y + $i) -Column $X
         Write-Colored -Text "│$space│" -Styles $Styles -NoNewline
     }
-    # This is the correct closing brace for the for loop
-} # This is the correct closing brace for the function
+
+    Move-Cursor -Row ($Y + $Height - 1) -Column $X
+    Write-Colored -Text $bottomBorder -Styles $Styles -NoNewline
+
+    if ($Title) {
+        $titleX = $X + [Math]::Max([Math]::Floor(($Width - $Title.Length) / 2), 1)
+        Move-Cursor -Row $Y -Column $titleX
+        Write-Colored -Text $Title -Styles $Styles -NoNewline
+    }
+}
 #endregion
 
 #region Module Init
-# Check if Git is installed
 try {
     $gitVersion = & git --version
     Write-Verbose "Git found: $gitVersion"
-}
-catch {
+} catch {
     Write-Warning "Git command not found. Please ensure Git is installed and available in PATH."
 }
 
-# Set up console encoding for special characters
 if ($script:IsWindowsPlatform) {
     try {
         [console]::OutputEncoding = [System.Text.Encoding]::UTF8
-    }
-    catch {
+    } catch {
         Write-Warning "Unable to set console encoding to UTF-8. Box characters may not display correctly."
     }
 }

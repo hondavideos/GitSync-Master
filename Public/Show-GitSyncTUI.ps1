@@ -12,11 +12,7 @@ function Show-GitSyncTUI {
     
     .PARAMETER DryRun
         If specified, the application will run in dry run mode, showing what commands would execute
-        without actually executing them.
-    
-    .PARAMETER Tutorial
-        If specified, starts the application in tutorial mode with simulated repositories.
-    
+        without actually executing them.    
     .EXAMPLE
         Show-GitSyncTUI
         
@@ -27,10 +23,6 @@ function Show-GitSyncTUI {
         
         Shows the Git Sync TUI for the specified repository in dry run mode.
     
-    .EXAMPLE
-        Show-GitSyncTUI -Tutorial
-        
-        Starts the Git Sync TUI in tutorial mode with simulated repositories.
     
     .NOTES
         Requires Git to be installed and available in PATH.
@@ -42,10 +34,8 @@ function Show-GitSyncTUI {
         [string]$Path = (Get-Location).Path,
         
         [Parameter(ParameterSetName = 'Normal')]
-        [switch]$DryRun,
+        [switch]$DryRun
         
-        [Parameter(ParameterSetName = 'Tutorial')]
-        [switch]$Tutorial
     )
     
     begin {
@@ -70,7 +60,6 @@ function Show-GitSyncTUI {
         $script:AppState = @{
             DryRun = $DryRun.IsPresent
             Path = $Path
-            IsTutorial = $Tutorial.IsPresent
             CurrentAction = "Status"
             SelectedPane = "Status"
             GitStatus = $null
@@ -108,8 +97,7 @@ function Show-GitSyncTUI {
     process {
         try {
             # Change to the specified directory if it exists
-            if (-not $Tutorial.IsPresent -and (Test-Path -Path $Path -PathType Container)) {
-                Set-Location -Path $Path
+            if (Test-Path -Path $Path -PathType Container) {
                 
                 # Check if this is a Git repository
                 $isGitRepo = Test-Path -Path (Join-Path -Path $Path -ChildPath ".git") -PathType Container
@@ -129,11 +117,6 @@ function Show-GitSyncTUI {
                         return
                     }
                 }
-            }
-            
-            if ($Tutorial.IsPresent) {
-                Start-GitTutorial
-                return
             }
             
             # Main UI loop
@@ -279,21 +262,14 @@ function Handle-UserInput {
             }
         }
         'T' {
-            if ($key.Modifiers -band [System.ConsoleModifiers]::Alt) {
-                # Start tutorial mode
-                Start-GitTutorial
+            # Toggle tooltips
+            if (-not [bool]($script:AppState.PSObject.Properties.Name -match "ShowTooltips")) {
+                $script:AppState | Add-Member -NotePropertyName ShowTooltips -NotePropertyValue $true
             }
-            else {
-                # Toggle tooltips
-                if (-not [bool]($script:AppState.PSObject.Properties.Name -match "ShowTooltips")) {
-                    $script:AppState | Add-Member -NotePropertyName ShowTooltips -NotePropertyValue $true
-                }
-                $script:AppState.ShowTooltips = -not $script:AppState.ShowTooltips
-                $message = if ($script:AppState.ShowTooltips) { "Tooltips enabled" } else { "Tooltips disabled" }
-                $script:AppState.Messages += $message
-            }
+            $script:AppState.ShowTooltips = -not $script:AppState.ShowTooltips
+            $message = if ($script:AppState.ShowTooltips) { "Tooltips enabled" } else { "Tooltips disabled" }
+            $script:AppState.Messages += $message
         }
-    }
     
     # Pane-specific keys
     switch ($script:AppState.SelectedPane) {
